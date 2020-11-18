@@ -1,13 +1,18 @@
 {% extends "base.html"%}
 {% block content %}
 <div class="jumbotron">
-
-  <h1>Thank you {{name}} for signing up, you love {{ color }}!</h1>
-  <h1>Here is a list of all name and color</h1>
+  <h1> All Post</h1>
+  <h2> there are {{all|length}} post in kanpai</h2>
   <ul>
-    {% for item in all %}
-    <li>{{item.name}} loves  {{item.color}}</li>
+    {% for item in all[:3] %}
+    <li>{{item.name}}
+      <br> Sex: {{item.sex}}
+      <br> Title: {{item.title}}
+      <br> post:
+      <br> {{item.content}}
+    </li>
     {% endfor %}
   </ul>
 </div>
+
 {% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html"%}
+{% block content %}
+<div class="jumbotron">
+<h1> Please enter the keyword </h1>
+<form method="POST">
+    {{form.hidden_tag() }}
+    {{form.key.label}} {{form.key}} {{form.submit()}}
+</form>
+
+{% if query %}
+    <h3> there are {{query|length}} posts. </h3>
+    {% for item in query %}
+    <li>{{item.name}} Sex: {{item.sex}}
+        <br> title: {{item.title}}
+        <br> post:
+        <br> {{item.content}}
+    </li>
+    {% endfor %}
+{% endif %}
+{% endblock %}
+

@@ -1,28 +1,21 @@
 {% extends "base.html"%}
 {% block content %}
 <div class="jumbotron">
-
-<h1>Welcome to the sign up page!</h1>
-  <form action="{{ url_for('thank_you')}}">
-    <label for="name">name</label>
-    <input type="text" name="name">
-    <label for="color">color</label>
-    <input type="text" name="color">
-    <input type="submit" value="Submit Form">
-  </form>
-  <!-- <div class="form-group">
-    <label>Username</label>
-    <input type="text" class="form-control" id="username" name="username" placeholder="Select a username">
-  </div>
-
-  <div class="form-group">
-    <label>Email</label>
-    <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email">
-  </div>
-
-  <div class="form-group">
-    <label>Password</label>
-    <input type="password" class="form-control" id="password" name="password" placeholder="Create a password">
-  </div> -->
+<h1>Welcome to the leave you post here!</h1>
+<p> there are {{all_post|length}} Posts in the forum</p>
+  <form method="POST">
+    {{form.hidden_tag() }}
+    {{form.name.label}} {{form.name}}
+    <br>
+    {{form.sex.label}} {{form.sex}}
+    <br>
+    {{form.title.label}} {{form.title}}
+    <br>
+    Your post:
+    <br>
+    {{form.content}}
+    <br>
+    {{ form.submit()}}
+  </form> 
 </div>
 {% endblock %}
