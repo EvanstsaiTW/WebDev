@@ -1,64 +1,17 @@
-from flask import Flask, render_template, request, session, redirect, url_for
-import os
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from wtforms import StringField, SubmitField
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, RadioField,TextAreaField
-from wtforms.validators import DataRequired
+#app.py
+from myproject import app,db
+from flask import render_template, redirect, request, url_for, flash, abort
+from flask_login import login_user,login_required,logout_user
+from myproject.models import User, Post
+from myproject.forms import LoginForm, RegistrationForm, ContentForm, SearchForm
 
-
-################# db ##################    
-basedir = os.path.abspath(os.path.dirname(__file__))
-""" print("basedir") """
-app = Flask(__name__)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-Migrate(app, db)
-db.create_all()
-app.config['SECRET_KEY'] = 'mykey'
-
-class Post(db.Model):
-    __table_name = 'post'
-    id = db.Column(db.Integer,primary_key=True)
-    name = db.Column(db.Text)
-    sex = db.Column(db.Text)
-    title = db.Column(db.Text)
-    content = db.Column(db.Text)
-
-    def __init__(self, name, sex, title, content):
-        self.name = name
-        self.sex = sex
-        self.title = title
-        self.content = content
-
-    def __repr__(self):
-        return f"{self.name}:{self.sex},{self.title},{self.content}"
         
-################# db ##################   
-
-#######Form#############
-class ContentForm(FlaskForm):
-    name = StringField("Username: ", validators= [DataRequired()])
-    sex = RadioField('Please choose your sex: ', choices= ['Male', 'Female'])
-    title = StringField("Title: ", validators= [DataRequired()])
-    content = TextAreaField("Your post")
-    submit = SubmitField('submit')
-
-class searchForm(FlaskForm):
-    key = StringField("keywords", validators=[DataRequired()])
-    submit = SubmitField('search!')
-
-########### views######## 
 @app.route('/')
 def index():
     return render_template('/index.html')
 
-@app.route('/signup_form', methods = ['GET', 'POST'])
-def signup_form():    
+@app.route('/post_form', methods = ['GET', 'POST'])
+def post_form():    
     form = ContentForm()
     if form.validate_on_submit():
         name = form.name.data
@@ -70,11 +23,11 @@ def signup_form():
         db.session.commit()
         return redirect(url_for('thank_you'))
     all_post = Post.query.all()
-    return render_template('signup_form.html', form = form, all_post = all_post)
+    return render_template('post_form.html', form = form, all_post = all_post)
 
 @app.route('/search', methods = ['GET', 'POST'])
 def search():
-    form = searchForm()
+    form = SearchForm()
     if form.validate_on_submit():
         key = form.key.data
         all_query = Post.query.all()
@@ -92,5 +45,65 @@ def thank_you():
     all_post = Post.query.all()
     return render_template('thank_you.html', all = all_post)
 
+# project 2: 
+@app.route('/welcome_user')
+@login_required
+def welcome():
+    return render_template('welcome.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You logged out!')
+    return redirect(url_for('index'))
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+
+    form = LoginForm()
+    if form.validate_on_submit():
+        # Grab the user from our User Models table
+        user = User.query.filter_by(email=form.email.data).first()
+        
+        # Check that the user was supplied and the password is right
+        # The verify_password method comes from the User object
+        # https://stackoverflow.com/questions/2209755/python-operation-vs-is-not
+
+        if user.check_password(form.password.data) and user is not None:
+            #Log in the user
+
+            login_user(user)
+            flash('Logged in successfully.')
+
+            # If a user was trying to visit a page that requires a login
+            # flask saves that URL as 'next'.
+            next = request.args.get('next')
+
+            # So let's now check if that next exists, otherwise we'll go to
+            # the welcome page.
+            if next == None or not next[0]=='/':
+                next = url_for('welcome') # to app function
+
+            return redirect(next)
+    return render_template('login.html', form=form)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegistrationForm()
+
+    if form.validate_on_submit():
+        user = User(email=form.email.data,
+                    username=form.username.data,
+                    password=form.password.data)
+
+        db.session.add(user)
+        db.session.commit()
+        flash('Thanks for registering! Now you can login!')
+        return redirect(url_for('login'))
+    return render_template('register.html', form=form)
+
+# python app.py to start the program
 if __name__ == '__main__':
     app.run(debug=True) 
