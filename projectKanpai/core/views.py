@@ -1,7 +1,8 @@
 # core/views.py
 from flask import render_template, request, Blueprint
-from projectKanpai.models import BlogPost
+from projectKanpai.models import BlogPost, User
 from projectKanpai.core.forms import SearchForm
+from flask_login import current_user
 
 
 core = Blueprint('core', __name__)
@@ -10,7 +11,12 @@ core = Blueprint('core', __name__)
 def index():
     page = request.args.get('page', 1, type=int)
     blog_posts = BlogPost.query.order_by(BlogPost.date.desc()).paginate(page = page, per_page = 5)
+    if current_user.is_authenticated:
+        user = User.query.filter_by(username = current_user.username).first_or_404()
+        likePost = user.likePost
+        return render_template('index.html', blog_posts = blog_posts, likePost = likePost)
     return render_template('index.html', blog_posts = blog_posts)
+    
 
 @core.route('/search', methods = ['GET', 'POST'])
 def search():

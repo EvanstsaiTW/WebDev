@@ -2,7 +2,7 @@
 from flask import render_template,url_for,flash,request,redirect,Blueprint,abort
 from flask_login import current_user,login_required
 from projectKanpai import db
-from projectKanpai.models import BlogPost
+from projectKanpai.models import BlogPost, User
 from projectKanpai.blog_posts.forms import BlogPostForm
 
 blog_posts = Blueprint("blog_posts", __name__)
@@ -48,7 +48,6 @@ def update(blog_post_id):
 
     form = BlogPostForm()
 
-
     if form.validate_on_submit():
 
         blog_post.title = form.title.data
@@ -80,3 +79,16 @@ def delete_post(blog_post_id):
     flash('Blog Post Deleted')
     return redirect(url_for('core.index'))
 #like
+@blog_posts.route('/<int:blog_post_id>/<action>', methods = ['GET', 'POST'])
+@login_required
+def like_posts(blog_post_id, action):
+    user = User.query.filter_by(username = current_user.username).first_or_404()
+    post = BlogPost.query.filter_by(id = blog_post_id).first()
+    print(user.likePost)
+    if action == "like":
+        user.likePost.append(post)
+        db.session.commit()
+    if action == "unlike":
+        user.likePost.remove(post)
+        db.session.commit()
+    return redirect(url_for('core.index'))

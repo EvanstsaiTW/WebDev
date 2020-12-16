@@ -2,13 +2,22 @@ from projectKanpai import db, login_manager
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import UserMixin
 from datetime import datetime
- # 2 table
 
+# from flask import Flask
+# from flask_sqlalchemy import SQLAlchemy
+# app = Flask(__name__)
+# db = SQLAlchemy(app)
 # a this to use flask login
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(user_id)
 
+
+# relationship table
+like = db.Table('like',
+    db.Column("user_id", db.Integer, db.ForeignKey('users.id')),
+    db.Column("blogpost_id", db.Integer, db.ForeignKey('blogposts.id'))
+    )
 class User(db.Model, UserMixin):
 
     # Create a table in the db
@@ -18,10 +27,10 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(64), unique=True, index=True)
     username = db.Column(db.String(64), unique=True, index=True)
     password_hash = db.Column(db.String(128))
-    
-    posts = db.relationship('BlogPost', backref='author')
+    likePost = db.relationship("BlogPost", secondary=like)     
+    posts = db.relationship('BlogPost', backref = 'author') # written by use this.
 
-    def __init__(self, email, username, password, likePosts):
+    def __init__(self, email, username, password):
         self.email = email
         self.username = username
         self.password_hash = generate_password_hash(password)
@@ -33,14 +42,16 @@ class User(db.Model, UserMixin):
         return f"username: {self.username}"
 
 class BlogPost(db.Model):
+    # Create a table in the db
+    __tablename__ = 'blogposts'
 
-    users = db.relationship(User)
+    # users = db.relationship(User)
     id = db.Column(db.Integer,primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable = False)
     date = db.Column(db.DateTime, nullable = False, default = datetime.utcnow)
     title = db.Column(db.String(160), nullable = False)
     text = db.Column(db.Text, nullable = False)
-
+    # likeUser = db.relationship("User", back_populates="likePost")
 
     def __init__(self, title, text, user_id):
         self.title = title

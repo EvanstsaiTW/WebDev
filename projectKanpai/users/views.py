@@ -31,9 +31,13 @@ def register():
 @users.route('/login', methods = ['GET', 'POST'])
 def login():
     form = LoginForm()
+    a = User.query.filter_by().all()
+    for i in a:
+        print(i.username)
     if form.validate_on_submit():
         # Grab the user from our User Models table
-        user = User.query.filter_by(email=form.email.data).first()
+        user = User.query.filter_by(email=form.email.data).first()  
+        print("--------here---------")   
         if user.check_password(form.password.data) and user is not None:
             #Log in the user
 
@@ -50,6 +54,7 @@ def login():
                 next = url_for('core.index') # to app function
 
             return redirect(next)
+    print("not login")   
     return render_template('login.html', form=form)
 
 #logout user
@@ -86,4 +91,6 @@ def user_posts(username):
     blog_posts = BlogPost.query.filter_by(author=user).order_by(BlogPost.date.desc()
     ).paginate(page=page,per_page=5)
     return render_template('user_blog_posts.html', blog_posts=blog_posts, user=user)
+
+
 
